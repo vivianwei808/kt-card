@@ -10,10 +10,18 @@
 ├── topics.js               专题注册表（新增专题改这里）
 ├── topics/
 │   ├── _template/          空白模板
-│   └── agent-loop-graph/
-│       ├── data.js         本专题的分层与卡片数据
+│   ├── agent-loop-graph/
+│   │   ├── data.js         本专题的分层与卡片数据
+│   │   ├── README.md       专题索引
+│   │   └── cards/          87 个 Markdown 卡片
+│   ├── ai-llm-expert-18/
+│   │   ├── data.js         AI 大模型应用专家 18 期的分层与卡片
+│   │   ├── README.md       专题索引
+│   │   └── cards/          151 个 Markdown 卡片
+│   └── k8s-enterprise/
+│       ├── data.js         K8s 企业级深度研修的分层与卡片
 │       ├── README.md       专题索引
-│       └── cards/          87 个 Markdown 卡片
+│       └── cards/          70 个 Markdown 卡片
 ├── _build/                生成脚本（可选，重跑会重写 data.js 与 cards）
 └── README.md
 ```
@@ -25,6 +33,8 @@
 - 门户：`index.html`
 - 专题：`index.html#/agent-loop-graph`
 - 某张卡：`index.html#/agent-loop-graph/L-03`
+- 18 期专题：`index.html#/ai-llm-expert-18`
+- K8s 专题：`index.html#/k8s-enterprise`
 
 ## 阅读器
 
@@ -45,3 +55,5 @@
 ## 当前专题
 
 - `agent-loop-graph`：Agent Loop + Graph 工程化，87 张卡片，8 个分层。
+- `ai-llm-expert-18`：AI 大模型应用专家 18 期，151 张卡片，10 个分层，覆盖 41 章课件。
+- `k8s-enterprise`：K8s 企业级深度研修，70 张卡片，9 个分层，覆盖 40 章课件。

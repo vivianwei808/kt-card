@@ -152,8 +152,15 @@ def write_topics_js(layers):
         "cards": len(CARDS),
         "layers": [{"name": l["name"], "color": l["color"], "count": l["count"]} for l in layers],
     }]
-    js = "window.KB_TOPICS = " + json.dumps(topics, ensure_ascii=False, indent=1) + ";\n"
-    with open(os.path.join(LIB, "topics.js"), "w", encoding="utf-8") as f:
+    # 保留其他专题的注册项，避免重跑本脚本把后加的专题从门户里抹掉。
+    path = os.path.join(LIB, "topics.js")
+    existing = []
+    if os.path.exists(path):
+        raw = open(path, encoding="utf-8").read()
+        existing = json.loads(raw[raw.find("["):raw.rfind("]") + 1])
+    merged = [t for t in existing if t.get("slug") != TOPIC_SLUG] + topics
+    js = "window.KB_TOPICS = " + json.dumps(merged, ensure_ascii=False, indent=1) + ";\n"
+    with open(path, "w", encoding="utf-8") as f:
         f.write(js)
 
 
@@ -167,7 +174,7 @@ APP_HTML = r"""<!DOCTYPE html>
 :root{
   --paper:#f7f5f0; --card:#fffdf8; --panel:#fffcf4; --ink:#1b1a17; --muted:#6b6659;
   --line:#e2ddd1; --shadow:0 1px 2px rgba(30,25,15,.05), 0 8px 24px rgba(30,25,15,.06);
-  --accent:#1d4ed8; --radius:14px; --bar-h:64px; --panel-w:452px;
+  --accent:#1d4ed8; --radius:14px; --bar-h:64px; --panel-w:520px; --panel-wide:min(920px, 92vw);
 }
 @media (prefers-color-scheme: dark){
   :root{ --paper:#14161a; --card:#1b1e24; --panel:#181b21; --ink:#e9e6de; --muted:#9b978c;
@@ -301,15 +308,28 @@ button{font:inherit}
   position:fixed; top:var(--bar-h); right:0; bottom:0; width:var(--panel-w); z-index:40;
   background:var(--panel); border-left:1px solid var(--line);
   box-shadow:-18px 0 40px rgba(30,25,15,.10);
-  transform:translateX(102%); transition:transform .24s ease; display:flex; flex-direction:column;
+  transform:translateX(102%); transition:transform .24s ease, width .24s ease; display:flex; flex-direction:column;
 }
 .panel.open{transform:none}
+.panel.wide{width:var(--panel-wide); box-shadow:-24px 0 64px rgba(30,25,15,.18)}
+.panel.wide .pBody{padding:26px max(26px, calc((100% - 800px)/2)) 56px}
+.panel.wide .pBody h2{font-size:27px; line-height:1.38}
+.panel.wide .pBody .pOne{font-size:15px}
+.panel.wide .sec li{font-size:14.5px; line-height:1.85}
+.panel.wide .sec.code li{font-size:13.5px}
+.panel.wide .sec code{font-size:12.5px}
+.panel.wide .sec.quote p,.panel.wide .sec.pit p{font-size:14.5px}
+@media (min-width:1041px){
+  .panel.wide{top:calc(var(--bar-h) + 14px); bottom:14px; border-radius:14px 0 0 14px}
+}
 .pBar{display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:2}
 .pBar .pPos{font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; margin-left:2px}
 .pBar .spacer{flex:1}
 .iconBtn{width:32px; height:30px; border-radius:7px; border:1px solid var(--line); background:var(--card); color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:13px}
 .iconBtn:hover:not(:disabled){color:var(--ink); border-color:var(--muted)}
 .iconBtn:disabled{opacity:.35; cursor:default}
+.wideBtn{width:auto; padding:0 10px; font-size:12px; letter-spacing:.02em}
+.wideBtn.on{color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%, var(--line)); background:color-mix(in srgb,var(--accent) 8%, var(--card))}
 .pBody{overflow:auto; padding:20px 22px 40px; scrollbar-width:thin}
 .pBody .pMeta{display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); margin-bottom:10px}
 .pBody .pMeta .badge{color:var(--c); background:color-mix(in srgb,var(--c) 12%, transparent); padding:2px 8px; border-radius:999px}
@@ -355,6 +375,9 @@ button{font:inherit}
 /* ---------- 响应式 ---------- */
 @media (max-width:1040px){
   .panel{top:0; width:100%; max-width:none; border-left:none; z-index:60}
+  .panel.wide{width:100%; border-radius:0}
+  .panel.wide .pBody{padding:20px 22px 40px}
+  .wideBtn{display:none}
   .scrim{z-index:55}
   .layout.detail-open{padding-right:0}
   .card .more{opacity:1}
@@ -385,6 +408,7 @@ button{font:inherit}
     <button class="iconBtn" id="pNext" title="下一张（↓）">↓</button>
     <span class="pPos" id="pPos"></span>
     <span class="spacer"></span>
+    <button class="iconBtn wideBtn" id="pWide" title="宽读（W）" aria-pressed="false">宽读</button>
     <button class="iconBtn" id="pClose" title="关闭（Esc）">✕</button>
   </div>
   <div class="pBody" id="pBody"></div>
@@ -398,6 +422,29 @@ const TOPICS = window.KB_TOPICS || [];
 const loaded = {};
 const state = { slug:null, topic:null, cardId:null, cardPushed:false, query:'', active:new Set(), visible:[] };
 const $ = id => document.getElementById(id);
+
+/* 阅读宽度：默认侧栏，宽读模式给长卡片留出正文宽度 */
+let widePref = false;
+try { widePref = localStorage.getItem('kb-wide') === '1'; } catch(e) {}
+function syncOverlay(){
+  const panel = $('panel'); if (!panel) return;
+  const open = panel.classList.contains('open');
+  const overlay = open && (window.innerWidth < 1041 || panel.classList.contains('wide'));
+  document.body.classList.toggle('panel-open', overlay);
+  $('scrim').classList.toggle('on', overlay);
+}
+function setWide(on, save){
+  const panel = $('panel'); if (!panel) return;
+  panel.classList.toggle('wide', on);
+  const btn = $('pWide');
+  if (btn) {
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '收起' : '宽读';
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  if (save !== false) { try { localStorage.setItem('kb-wide', on ? '1' : '0'); } catch(e) {} }
+  syncOverlay();
+}
 
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function loadTopic(slug){
@@ -590,7 +637,7 @@ function openCard(id, silent){
   body.innerHTML = cardBody(c);
   panel.classList.add('open'); panel.setAttribute('aria-hidden','false');
   $('layout') && $('layout').classList.add('detail-open');
-  if (window.innerWidth < 1041) { document.body.classList.add('panel-open'); $('scrim').classList.add('on'); }
+  syncOverlay();
   body.scrollTop = 0;
   updatePos();
   $('pCopy').onclick = () => copyCard(c, $('pCopy'));
@@ -604,7 +651,7 @@ function closePanel(silent){
   state.cardId = null;
   $('panel').classList.remove('open'); $('panel').setAttribute('aria-hidden','true');
   $('layout') && $('layout').classList.remove('detail-open');
-  document.body.classList.remove('panel-open'); $('scrim').classList.remove('on');
+  syncOverlay();
   document.querySelectorAll('.card.sel').forEach(el=>el.classList.remove('sel'));
   if (silent) return;
   if (state.cardPushed) { state.cardPushed = false; history.back(); return; }
@@ -671,7 +718,7 @@ function openHelp(){
     <div class="sec quote"><p>主题色只影响卡片顶部与徽标；分层颜色写在 layers 里，同一专题内保持一致。</p></div>`;
   panel.classList.add('open'); panel.setAttribute('aria-hidden','false');
   $('layout') && $('layout').classList.add('detail-open');
-  if (window.innerWidth < 1041) { document.body.classList.add('panel-open'); $('scrim').classList.add('on'); }
+  syncOverlay();
   body.scrollTop = 0;
   $('pPos').textContent = '';
   $('pPrev').disabled = true; $('pNext').disabled = true;
@@ -719,11 +766,9 @@ window.addEventListener('hashchange', route);
 $('pClose').onclick = () => { if (state.topic) closePanel(); else { closePanel(true); history.replaceState(null,'','#/'); renderPortal(); } };
 $('pPrev').onclick = () => step(-1);
 $('pNext').onclick = () => step(1);
+$('pWide').onclick = () => setWide(!$('panel').classList.contains('wide'));
 $('scrim').onclick = () => { state.topic ? closePanel() : $('pClose').onclick(); };
-window.addEventListener('resize', () => {
-  if (window.innerWidth >= 1041) { document.body.classList.remove('panel-open'); $('scrim').classList.remove('on'); }
-  else if ($('panel').classList.contains('open')) { document.body.classList.add('panel-open'); $('scrim').classList.add('on'); }
-});
+window.addEventListener('resize', syncOverlay);
 document.addEventListener('keydown', e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
   if (e.key === '/' && !typing) { const q=$('q'); if (q) { e.preventDefault(); q.focus(); } }
@@ -734,9 +779,13 @@ document.addEventListener('keydown', e => {
   if (!typing && $('panel').classList.contains('open')) {
     if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); step(-1); }
     if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); step(1); }
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'w' || e.key === 'W')) {
+      e.preventDefault(); setWide(!$('panel').classList.contains('wide'));
+    }
   }
 });
 
+setWide(widePref, false);
 route();
 </script>
 </body>
