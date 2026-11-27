@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+"""V 层第三批：第 11-16 讲。"""
+
+V = [
+    {
+        "id": "V-11",
+        "layer": "V",
+        "title": "第11讲 项目实战一：小红书爆款笔记生成",
+        "oneliner": "五个角色接力把一张商品图变成一篇小红书笔记，策略、文案、SEO、视觉、图片编辑各管一段。",
+        "mechanism": [
+            "角色设计：策略专家定选题与人群，文案编辑写正文，SEO 专家管关键词与标签，视觉分析专家读商品图，图片编辑专家处理配图。",
+            "流程是 Agent-Task-Process 三要素的第一次完整落地：每个角色绑一个 Task，Process 串联，最后由整合环节输出终稿。",
+            "视觉环节先用多模态模型读图，把图片信息变成结构化字段，文案环节再据此写，避免凭空编卖点。",
+            "工程侧不止 Agent：项目里带 app 目录和一整套 API 集成测试，笔记生成走本地服务接口，key 通过 X-API-Key 传。",
+            "这一讲把前面十讲的能力串起来，也是后面所有实战项目的模板。",
+        ],
+        "code": [
+            "m2l17 之外的示例目录：项目一对应的角色与任务定义",
+            "README.md：项目实战一的运行说明",
+            "m2l6/m2l6_agent.py：视觉分析环节的复现基础",
+        ],
+        "reuse": [
+            "内容生成类项目照这个分工搭：策略、撰写、SEO、视觉各一个角色。",
+            "先跑通单条内容，再做批量与接口化。",
+            "把生成链路做成接口，前端和运营才好用。",
+        ],
+        "interview": "内容生成项目我拆五个角色：策略定方向、文案写正文、SEO 管关键词、视觉读图、图片编辑管配图，多模态环节保证卖点有依据。",
+        "pitfall": "让一个 Agent 从读图到写文案全包，卖点靠编，配图与正文对不上。",
+        "source": "第11讲",
+        "tags": ["项目实战", "内容生成", "多角色"],
+    },
+    {
+        "id": "V-12",
+        "layer": "V",
+        "title": "第12讲 工具设计哲学：从 API 到 Agent-Native",
+        "oneliner": "模型用工具有两条路：Native Function Calling 是直觉反射，ReAct 是思维链推理，成本和准确性的取舍不一样。",
+        "mechanism": [
+            "Native Function Calling：模型直接输出 JSON 形式的工具调用，程序执行后把结果塞回，速度快、token 少，黑盒。",
+            "ReAct Engineering：模型先写 Thought 再选 Action，多一轮推理，token 更多，但复杂场景准确率更高，过程可解释。",
+            "对比四维：性能与成本、准确性、可解释性、适合场景。单一明确场景用 Function Calling，不确定性高的场景用 ReAct。",
+            "范式跃迁的落点是语义：API 面向程序员，工具面向模型，名字、参数、返回都要按模型的认知习惯重写。",
+            "这一讲为后面五步 SOP 打底，先讲清「为什么工具要重写」。",
+        ],
+        "code": [
+            "m1l2/m1l2_raw_agent.py：ReAct 风格的文本协议实现",
+            "tools/baidu_search.py：Function Calling 风格的工具定义",
+        ],
+        "reuse": [
+            "工具数量少、场景明确，用原生 Function Calling，省 token 也快。",
+            "需要模型自己判断该不该用工具时，给它 Thought 的空间。",
+            "两种方式可以混用，关键在工具描述写得清楚。",
+        ],
+        "interview": "工具调用有两条路：Function Calling 快而省，适合明确场景；ReAct 多一轮思考，复杂场景更准也更可解释，我按任务不确定性选。",
+        "pitfall": "所有场景都上 ReAct，token 翻倍，简单任务也没变准。",
+        "source": "第12讲",
+        "tags": ["工具", "Function Calling", "ReAct"],
+    },
+    {
+        "id": "V-13",
+        "layer": "V",
+        "title": "第13讲 自定义工具封装：五步标准 SOP",
+        "oneliner": "工具定义、参数定义、语义重构、I/O 瘦身、错误转译，五步把一个 REST 接口改造成模型能用的工具。",
+        "mechanism": [
+            "Step 1 工具定义看语义完整性：碎片化的文字、图片、视频搜索聚合成一个 search；一个接口干多件事时按意图拆开。",
+            "Step 2 参数定义用 Pydantic，字段描述写给模型看，示例里就是 query、top_k、time_range、sites 四类。",
+            "Step 3 语义重构把接口语言翻成模型语言，工具名用动词加对象，描述写清何时用。",
+            "Step 4 I/O 瘦身做降噪增信：原始返回里 request_id、icon、image、search_source 全是噪音，只留标题、链接、摘要。",
+            "Step 5 错误转译把错误码翻成建议，模型据此决定换关键词还是停下。",
+        ],
+        "code": [
+            "tools/baidu_search.py：五步在一个工具里的完整落地",
+            "tools/test_baidu_search.py：参数校验与错误分支的测试",
+        ],
+        "reuse": [
+            "把五步写进团队的工具开发规范，评审时逐条对照。",
+            "I/O 瘦身前后各量一次返回大小，效果直接可见。",
+            "错误转译和日志分开，前者给模型看，后者给人看。",
+        ],
+        "interview": "工具封装五步：定义、参数、语义重构、I/O 瘦身、错误转译；最值钱的是后两步，返回瘦下来上下文才撑得住长任务。",
+        "pitfall": "跳过语义重构，工具名还是 API 原名的拼音缩写，模型根本不知道它干什么。",
+        "source": "第13讲",
+        "tags": ["工具", "SOP", "实战"],
+    },
+    {
+        "id": "V-14",
+        "layer": "V",
+        "title": "第14讲 MCP 协议：标准化定义工具接口",
+        "oneliner": "MCP 是 AI 应用和工具之间的 USB 协议，工具开发一次，各处都能插。",
+        "mechanism": [
+            "架构三件套：MCP Client 在 AI 应用侧，MCP Server 在工具侧，中间走 JSON-RPC，能力用 JSON-Schema 描述。",
+            "USB 类比讲得最清楚：Host 是电脑（Agent），Device 是外设（工具），Protocol 统一了插头。",
+            "核心价值是生态复用与架构解耦：没有 MCP 时每个框架硬编码集成，有了 MCP 后工具与框架解耦。",
+            "生态已经有资源站：官方 registry.modelcontextprotocol.io、Smithery、mcp.so、Glama，覆盖数据库、大厂 API、开发者工具。",
+            "客户端侧 Cursor、Windsurf 等都已支持，同一批工具能在不同宿主里用。",
+        ],
+        "code": [
+            "m2l9/m2l9_mcp.py：MCPServerHTTP 与工具过滤器",
+            "sandbox-docker-compose.yaml：沙箱作为 MCP 服务的接入方式",
+        ],
+        "reuse": [
+            "内部工具统一包成 MCP 服务，别给每个框架写一份适配。",
+            "选生态工具先看维护活跃度，再看 schema 是否规范。",
+            "多租户靠 header 传身份，别在 URL 里带用户信息。",
+        ],
+        "interview": "MCP 是工具层的 USB 协议：JSON-RPC 传输、JSON-Schema 描述能力，工具写一次各处可插，解决了框架与工具的硬编码耦合。",
+        "pitfall": "把 MCP 当成另一个框架来学，其实它只规定接口，不规定 Agent 怎么想。",
+        "source": "第14讲",
+        "tags": ["MCP", "协议", "生态"],
+    },
+]

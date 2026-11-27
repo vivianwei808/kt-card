@@ -18,10 +18,14 @@
 │   │   ├── data.js         AI 大模型应用专家 18 期的分层与卡片
 │   │   ├── README.md       专题索引
 │   │   └── cards/          151 个 Markdown 卡片
-│   └── k8s-enterprise/
-│       ├── data.js         K8s 企业级深度研修的分层与卡片
+│   ├── k8s-enterprise/
+│   │   ├── data.js         K8s 企业级深度研修的分层与卡片
+│   │   ├── README.md       专题索引
+│   │   └── cards/          70 个 Markdown 卡片
+│   └── enterprise-multi-agent/
+│       ├── data.js         企业级多智能体设计实战的分层与卡片
 │       ├── README.md       专题索引
-│       └── cards/          70 个 Markdown 卡片
+│       └── cards/          90 个 Markdown 卡片
 ├── _build/                生成脚本（可选，重跑会重写 data.js 与 cards）
 └── README.md
 ```
@@ -35,6 +39,7 @@
 - 某张卡：`index.html#/agent-loop-graph/L-03`
 - 18 期专题：`index.html#/ai-llm-expert-18`
 - K8s 专题：`index.html#/k8s-enterprise`
+- 多智能体专题：`index.html#/enterprise-multi-agent`
 
 ## 阅读器
 
@@ -57,3 +62,4 @@
 - `agent-loop-graph`：Agent Loop + Graph 工程化，87 张卡片，8 个分层。
 - `ai-llm-expert-18`：AI 大模型应用专家 18 期，151 张卡片，10 个分层，覆盖 41 章课件。
 - `k8s-enterprise`：K8s 企业级深度研修，70 张卡片，9 个分层，覆盖 40 章课件。
+- `enterprise-multi-agent`：企业级多智能体设计实战，90 张卡片，9 个分层，覆盖 40 讲视频与 CrewAI 配套代码。

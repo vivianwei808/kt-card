@@ -187,5 +187,68 @@ window.KB_TOPICS = [
     "count": 9
    }
   ]
+ },
+ {
+  "slug": "enterprise-multi-agent",
+  "title": "企业级多智能体设计实战",
+  "subtitle": "从四种架构范式，到可观测、可加固、可持续运营的 Agent 团队",
+  "description": "基于《企业级多智能体设计实战》40 讲视频与 CrewAI 配套代码整理。视频按关键帧抽帧取要点，代码落点取自 crewai_mas_demo 仓库。",
+  "tags": [
+   "Multi-Agent",
+   "CrewAI",
+   "Agent",
+   "MCP",
+   "工程化"
+  ],
+  "updated": "2026-11-27",
+  "accent": "#7c3aed",
+  "cards": 90,
+  "layers": [
+   {
+    "name": "架构选型",
+    "color": "#5b6472",
+    "count": 6
+   },
+   {
+    "name": "Agent 与任务契约",
+    "color": "#b45309",
+    "count": 6
+   },
+   {
+    "name": "工具与协议",
+    "color": "#0f766e",
+    "count": 6
+   },
+   {
+    "name": "上下文与记忆",
+    "color": "#1d4ed8",
+    "count": 7
+   },
+   {
+    "name": "多智能体协作",
+    "color": "#7c3aed",
+    "count": 6
+   },
+   {
+    "name": "生产工程化",
+    "color": "#b91c1c",
+    "count": 6
+   },
+   {
+    "name": "交付与运营",
+    "color": "#047857",
+    "count": 7
+   },
+   {
+    "name": "每讲速览",
+    "color": "#0e7490",
+    "count": 40
+   },
+   {
+    "name": "简历与面试",
+    "color": "#be185d",
+    "count": 6
+   }
+  ]
  }
 ];
